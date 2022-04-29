@@ -10,7 +10,7 @@ $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{
 	}
 $FileBrowser.ShowDialog() | Out-Null
 $CSVPath = $FileBrowser.FileName
-$emails = (Import-Csv $CSVPath).UPN
+$Emails = (Import-Csv $CSVPath).UPN
 
 #Connect to Security and Compliance Center
 Import-Module ExchangeOnlineManagement
@@ -19,19 +19,20 @@ Connect-IPPSSession -UserPrincipalName $Admin
 #Start Compliance Search
 $Locations = @()
 Write-Host "Creating and running search: " $Description
-ForEach ($email in $emails)
+ForEach ($Email in $Emails)
 {
-	$UserSearch = Get-User -Identity $email
-	If ($UserSearch -ne $null)
+	$UserSearch = Get-User -Identity $Email -ErrorAction SilentlyContinue | Select Name,UserPrincipalName
+	If ($UserSearch -ne $Null)
 	{
-		$Locations += $UserSearch
+		$Locations += ($UserSearch.UserPrincipalName).Where({$_.Trim()})
 	}
 	Else {
-		Write-Host "$email not found."
+		Write-Host "$Email not found, probably already removed."
 	}
 }
-$search = New-ComplianceSearch -Name $Description -ExchangeLocation $Locations | Start-ComplianceSearch
-While ((Get-ComplianceSearch $search.Name).Status -ne "Completed")
+
+$Search = New-ComplianceSearch -Name $Description -ExchangeLocation $Locations | Start-ComplianceSearch
+While ((Get-ComplianceSearch $Search.Name).Status -ne "Completed")
 	{
     Write-Host " ." -NoNewline
     Start-Sleep -s 3
@@ -44,4 +45,4 @@ New-ComplianceSearchAction -SearchName $Description -Export -Format Fxstream
 Write-Host "Check Security and Compliance Center for Status"
 
 #Disconnect from Exchange Online
-Disconnect-ExchangeOnline
+Disconnect-ExchangeOnline -Confirm:$False
