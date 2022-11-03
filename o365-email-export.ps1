@@ -21,10 +21,11 @@ $Locations = @()
 Write-Host "Creating and running search: " $Description
 ForEach ($Email in $Emails)
 {
-	$UserSearch = Get-User -Identity $Email -ErrorAction SilentlyContinue | Select Name,UserPrincipalName
+	$UserSearch = Get-User -Identity $Email -ErrorAction SilentlyContinue | Select Name
 	If ($UserSearch -ne $Null)
 	{
-		$Locations += ($UserSearch.UserPrincipalName).Where({$_.Trim()})
+		#Removed because missing UPN in o365 - $Locations += ($UserSearch.UserPrincipalName).Where({$_.Trim()})
+		$Locations += ($Email)
 	}
 	Else {
 		Write-Host "$Email not found, probably already removed."
