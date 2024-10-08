@@ -19,11 +19,9 @@ Connect-IPPSSession -UserPrincipalName $Admin
 #Start Compliance Search
 $Locations = @()
 Write-Host "Creating and running search: " $Description
-ForEach ($Email in $Emails)
-{
+ForEach ($Email in $Emails){
 	$UserSearch = Get-User -Identity $Email -ErrorAction SilentlyContinue | Select Name
-	If ($UserSearch -ne $Null)
-	{
+	If ($UserSearch -ne $Null){
 		#Removed because missing UPN in o365 - $Locations += ($UserSearch.UserPrincipalName).Where({$_.Trim()})
 		$Locations += ($Email)
 	}
@@ -33,11 +31,11 @@ ForEach ($Email in $Emails)
 }
 
 $Search = New-ComplianceSearch -Name $Description -ExchangeLocation $Locations | Start-ComplianceSearch
-While ((Get-ComplianceSearch $Search.Name).Status -ne "Completed")
-	{
-    Write-Host " ." -NoNewline
-    Start-Sleep -s 3
-	}
+While ((Get-ComplianceSearch $Search.Name).Status -ne "Completed"){
+	Write-Host " ." -NoNewline
+	Start-Sleep -s 3
+}
+
 Write-Host "Search Complete!"
 
 #Start Export Action
